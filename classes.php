@@ -3,15 +3,15 @@ const API_KEY = "ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3l
 class Token {
   public $value;
   public function __construct($api_key) {
-    // Create a new cURL session
+
     $ch = curl_init('https://accept.paymob.com/api/auth/tokens');
-    // Set the options for the cURL session
+
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array('api_key' => $api_key)));
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
     // Execute the cURL session and store the result
     $result = curl_exec($ch);
-    // Close the cURL session
+
     curl_close($ch);
     // Decode the result and assign the token value to the value property
     $this->value = json_decode($result)->token;
@@ -20,14 +20,9 @@ class Token {
 
 // Define the Order class
 class Order {
-  // Declare the data property
   private $data;
-
-  // Define the constructor that takes the course ids as a parameter
   public function __construct($course_ids) {
-    // Create an empty array for the items
     $items = array();
-    // Loop through the course ids
     foreach ($course_ids as $course_id) {
       // Get the course details from the database
       $course = get_course_by_id($course_id);
@@ -39,14 +34,12 @@ class Order {
         'description' => $course['descr']
       );
     }
-    // Calculate the total amount of the order
     $amount_cents = 0;
     foreach ($items as $item) {
       $amount_cents += $item['amount_cents'] * $item['quantity'];
     }
     // Generate a unique merchant order id
     $merchant_order_id = uniqid();
-    // Assign the order data to the data property
     $this->data = array(
       'auth_token' => getToken(),
       'delivery_needed' => 'false',
@@ -57,31 +50,19 @@ class Order {
     );
   }
 
-  // Define the sendPostRequest method that takes the url as a parameter
   public function sendPostRequest($url) {
-    // Create a new cURL session
     $ch = curl_init($url);
-    // Set the options for the cURL session
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($this->data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-    // Execute the cURL session and store the result
     $result = curl_exec($ch);
-    // Close the cURL session
     curl_close($ch);
-    // Return the result
     return $result;
   }
 }
-
-// Define the PaymentKey class
 class PaymentKey {
-  // Declare the data property
   private $data;
-
-  // Define the constructor that takes the order response as a parameter
   public function __construct($response) {
-    // Decode the order response
     $response = json_decode($response, true);
     // Assign the payment key data to the data property
     $this->data = array(
@@ -110,19 +91,13 @@ class PaymentKey {
     );
   }
 
-  // Define the sendPostRequest method that takes the url as a parameter
   public function sendPostRequest($url) : object {
-    // Create a new cURL session
     $ch = curl_init($url);
-    // Set the options for the cURL session
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($this->data));
     curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-    // Execute the cURL session and store the result
     $result = curl_exec($ch);
-    // Close the cURL session
     curl_close($ch);
-    // Return the result
     return json_decode($result);
   }
 }
