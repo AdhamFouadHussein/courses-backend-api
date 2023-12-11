@@ -62,45 +62,48 @@ class Order {
 }
 class PaymentKey {
   private $data;
-  public function __construct($response) {
-    $response = json_decode($response, true);
-    // Assign the payment key data to the data property
-    $this->data = array(
-      'auth_token' => getToken(),
-      'amount_cents' => $response['amount_cents'],
-      'expiration' => 3600,
-      'order_id' => $response['id'],
-      'billing_data' => array(
-        'apartment' => '803',
-        'email' => 'claudette09@exa.com',
-        'floor' => '42',
-        'first_name' => 'Clifford',
-        'street' => 'Ethan Land',
-        'building' => '8028',
-        'phone_number' => '+86(8)9135210487',
-        'shipping_method' => 'PKG',
-        'postal_code' => '01898',
-        'city' => 'Jaskolskiburgh',
-        'country' => 'CR',
-        'last_name' => 'Nicolas',
-        'state' => 'NA'
-      ),
-      'currency' => 'EGP',
-      'integration_id' => 4410231,
-      'lock_order_when_paid' => 'false'
-    );
+
+  public function __construct($response, $email, $firstName, $lastName, $phone) {
+      $response = json_decode($response, true);
+
+      // Assign the payment key data to the data property
+      $this->data = array(
+          'auth_token' => getToken(),
+          'amount_cents' => $response['amount_cents'],
+          'expiration' => 3600,
+          'order_id' => $response['id'],
+          'billing_data' => array(
+              'apartment' => 'NA',
+              'email' => $email, // Use the email parameter here
+              'floor' => 'NA',
+              'first_name' => $firstName, // Use the firstName parameter here
+              'street' => 'NA',
+              'building' => 'NA',
+              'phone_number' => $phone,
+              'shipping_method' => 'NA',
+              'postal_code' => 'NA',
+              'city' => 'NA',
+              'country' => 'NA',
+              'last_name' => $lastName, // Use the lastName parameter here
+              'state' => 'NA'
+          ),
+          'currency' => 'EGP',
+          'integration_id' => 4410231,
+          'lock_order_when_paid' => 'false'
+      );
   }
 
   public function sendPostRequest($url) : object {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($this->data));
-    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
-    $result = curl_exec($ch);
-    curl_close($ch);
-    return json_decode($result);
+      $ch = curl_init($url);
+      curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+      curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($this->data));
+      curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+      $result = curl_exec($ch);
+      curl_close($ch);
+      return json_decode($result);
   }
 }
+
 
 // Define a helper function to get the course details from the database by id
 function get_course_by_id($id) {

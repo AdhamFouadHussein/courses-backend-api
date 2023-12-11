@@ -12,7 +12,7 @@ function getToken(){
   // Return the token value
   return $token->value;
 }
-function getCart() {
+function getCartِAndUserInfo() {
     // Get the JSON array of numbers from the request body
     $json = file_get_contents('php://input');
     $cart = json_decode($json, true); 
@@ -28,10 +28,14 @@ function processOrder($course_ids, $url) {
   return $order->sendPostRequest($url);
 }
 
-// Define a function to create a payment key from the order response
-function createPaymentKey($response, $url) : object{
+function createPaymentKey($response, $url, $cart) : object{
+  // Get user details from the cart
+  $email = $cart['email'];
+  $firstName = $cart['firstName'];
+  $lastName = $cart['lastName'];
+  $phone = $cart['phone'];
   // Create a new PaymentKey object from the response
-  $paymentKey = new PaymentKey($response);
+  $paymentKey = new PaymentKey($response, $email, $firstName, $lastName, $phone);
   // Send a post request to the url and return the result
   return $paymentKey->sendPostRequest($url);
 }
@@ -47,16 +51,17 @@ function pay(string $payment_token, $integration_id) {
 }
 
 try {
-    $cart = getCart();
+    $cart = getCartِAndUserInfo();
     // Call the getToken function to get the authentication token
     $auth_token = getToken();
     // Call the processOrder function with the cart array and the order url
-    $response = processOrder($cart, 'https://accept.paymobsolutions.com/api/ecommerce/orders');
+    $response = processOrder($cart['ids'], 'https://accept.paymobsolutions.com/api/ecommerce/orders');
     // Call the createPaymentKey function with the response and the payment key url
-    $result = createPaymentKey($response, 'https://accept.paymobsolutions.com/api/acceptance/payment_keys');
+    $result = createPaymentKey($response, 'https://accept.paymobsolutions.com/api/acceptance/payment_keys', $cart);
     // Call the pay function with the payment token and the integration id
     $pay_url = pay($result->token, 4410231);
-    echo "<iframe src=\"$pay_url\" width=50% height=70%></iframe>";
+    echo $pay_url;
+    //echo "<iframe src=\"$pay_url\" width=50% height=70%></iframe>";
     exit();
 } catch (Exception $e) {
   // Echo the exception message
