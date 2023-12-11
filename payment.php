@@ -60,9 +60,9 @@ try {
     $result = createPaymentKey($response, 'https://accept.paymobsolutions.com/api/acceptance/payment_keys', $cart);
     // Call the pay function with the payment token and the integration id
     $pay_url = pay($result->token, 4410231);
-    //echo $pay_url;
+    echo $pay_url;
     //echo "<iframe src=\"$pay_url\" width=50% height=70%></iframe>";
-    header("Location: $pay_url");
+    //header("Location: $pay_url");
     exit();
 } catch (Exception $e) {
   // Echo the exception message
