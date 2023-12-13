@@ -113,6 +113,8 @@ class PaymentKey {
 function get_course_by_id($id) {
   // Connect to the database
   $conn = new mysqli('localhost', 'doma', 'password', 'tafl');
+    // Set the charset to UTF-8
+    $conn->set_charset("utf8");
   // Check the connection
   if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
