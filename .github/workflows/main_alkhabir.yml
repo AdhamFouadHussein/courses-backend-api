@@ -63,4 +63,4 @@ jobs:
           app-name: 'alkhabir'
           slot-name: 'Production'
           package: .
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_AEA46D89E2A249F482C3C937C40CFE73 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_A3CACD31511C4BE5993C8CC5B33718E7 }}
