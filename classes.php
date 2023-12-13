@@ -1,4 +1,8 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header('Content-Type: text/html; charset=utf-8');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type');
 const API_KEY = "ZXlKaGJHY2lPaUpJVXpVeE1pSXNJblI1Y0NJNklrcFhWQ0o5LmV5SmpiR0Z6Y3lJNklrMWxjbU5vWVc1MElpd2ljSEp2Wm1sc1pWOXdheUk2T1RRMU5qQTBMQ0p1WVcxbElqb2lhVzVwZEdsaGJDSjkub2V1YkFjYWZ6ZE9YdXdNUTh3bFV1STBvV0xlT1FSRm9vcXp0UDFOb3M1bFlZY3NyX3lvdWFYZEpFZnpVVlRRdFR0WHpjbzZQNGxqTjdfT19rcW1nMFE=";
 class Token {
   public $value;
