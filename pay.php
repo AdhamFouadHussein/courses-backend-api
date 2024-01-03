@@ -50,7 +50,7 @@ $id = $obj->id;
 <script> history.replaceState({}, "", location.href.split("?")[0]); </script>
 </head>
 <body>
-<form action="https://hmjswbs17o.sharedwithexpose.com/#/my-courses/" class="paymentWidgets" data-brands="AMEX MADA MASTER VISA"></form>
+<form action="https://alkhabir.co/#/my-courses/" class="paymentWidgets" data-brands="AMEX MADA MASTER VISA"></form>
     <p style="align-items: center;">Total Amount:
          <?php 
             $obj = new MyClass();
