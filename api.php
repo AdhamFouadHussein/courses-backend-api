@@ -39,6 +39,9 @@ elseif ($path == '/pay'){
 elseif($path == '/fpay'){
     updateTrans($conn);
 }
+elseif($path == '/my-courses'){
+    getPaidCourses($conn);
+}
 /*elseif (preg_match('/^\/lessons\/(\d+)$/', $path, $matches)){
     getLessons($conn,$matches[1]);
 }*/elseif ($path == '/partners') {
@@ -225,5 +228,34 @@ function updateUserCourses($conn, $jsonData){
     }
     echo json_encode($response);
 }
+function getPaidCourses($conn){
+    // Get the email from the JSON POST request
+    $jsonData = json_decode(file_get_contents('php://input'), true);
+
+    // Prepare and execute the query to get the courses from the users table
+    $stmt = $conn->prepare("SELECT `own_courses` FROM `users` WHERE `email` = ?");
+    $stmt->bind_param("s", $jsonData['email']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $course_ids = json_decode($row['own_courses'], true);
+
+    // Prepare the query to get the courses from the courses table
+    $query = "SELECT * FROM `courses` WHERE `id` IN (" . implode(',', array_fill(0, count($course_ids), '?')) . ")";
+    $stmt = $conn->prepare($query);
+
+    // Bind the course ids to the query
+    $types = str_repeat('s', count($course_ids));
+    $stmt->bind_param($types, ...$course_ids);
+
+    // Execute the query and fetch the result
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $courses = $result->fetch_all(MYSQLI_ASSOC);
+
+    // Echo the courses as JSON
+    echo json_encode($courses);
+}
+
 $conn->close(); 
 ?>
