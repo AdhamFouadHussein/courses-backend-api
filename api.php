@@ -174,12 +174,14 @@ function updateTrans($conn){
     $stmt->bind_param("s", $jsonData['id']);
     $response = array();
     if ($stmt->execute()) {
-        $stmt = $conn->prepare("SELECT `courses` FROM `transactions` WHERE `id` = ?");
+        $stmt = $conn->prepare("SELECT `courses`, `email` FROM `transactions` WHERE `id` = ?");
         $stmt->bind_param("s", $jsonData['id']);
         if ($stmt->execute()){
             $result = $stmt->get_result();
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
+                $jsonData['ids'] = json_decode($row['courses'], true); // Add the courses to jsonData
+                $jsonData['email'] = $row['email']; // Add the email to jsonData
                 $response = array('status' => 'success', 'message' => 'Transaction updated successfully', 'courses' => $row['courses']);
             } else {
                 $response = array('status' => 'error', 'message' => 'No transaction found with the provided id');
@@ -191,18 +193,35 @@ function updateTrans($conn){
         $response = array('status' => 'error', 'message' => 'Failed to update transaction');
     }
     echo json_encode($response);
-    //updateUserCourses($conn, $jsonData);
+    updateUserCourses($conn, $jsonData); // Call updateUserCourses with the updated jsonData
 }
 
 
+
+
 function updateUserCourses($conn, $jsonData){
+    // Fetch the current courses of the user
+    $stmt = $conn->prepare("SELECT `own_courses` FROM `users` WHERE `email` = ?");
+    $stmt->bind_param("s", $jsonData['email']);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $current_courses = json_decode($row['own_courses'], true);
+
+    // If the user has courses, append the new ones
+    if ($current_courses) {
+        $new_courses = array_merge($current_courses, $jsonData['ids']);
+    } else {
+        $new_courses = $jsonData['ids'];
+    }
+
+    // Update the user's courses
     $stmt = $conn->prepare("UPDATE `users` SET `own_courses`= ? WHERE `email` = ?");
-    $stmt->bind_param("ss", $jsonData['ids'] ,$jsonData['email']);
+    $stmt->bind_param("ss", json_encode($new_courses), $jsonData['email']);
     if ($stmt->execute()) {
         $response = array('status' => 'success', 'message' => 'User updated successfully');
-
     } else {
-           $response = array('status' => 'error', 'message' => 'Failed to update user');
+        $response = array('status' => 'error', 'message' => 'Failed to update user');
     }
     echo json_encode($response);
 }
