@@ -36,6 +36,9 @@ elseif (preg_match('/^\/updateUser\/(\w+)$/', $path, $matches)) {
 elseif ($path == '/pay'){
     newTrans($conn);
 }
+elseif($path == '/fpay'){
+    updateTrans($conn);
+}
 /*elseif (preg_match('/^\/lessons\/(\d+)$/', $path, $matches)){
     getLessons($conn,$matches[1]);
 }*/elseif ($path == '/partners') {
@@ -165,7 +168,43 @@ function newTrans($conn){
     echo json_encode($response);
     
 }
+function updateTrans($conn){
+    $jsonData = json_decode(file_get_contents('php://input'), true);
+    $stmt = $conn->prepare("UPDATE `transactions` SET `status`= 1 WHERE `id` = ?");
+    $stmt->bind_param("s", $jsonData['id']);
+    $response = array();
+    if ($stmt->execute()) {
+        $stmt = $conn->prepare("SELECT `courses` FROM `transactions` WHERE `id` = ?");
+        $stmt->bind_param("s", $jsonData['id']);
+        if ($stmt->execute()){
+            $result = $stmt->get_result();
+            if ($result->num_rows > 0) {
+                $row = $result->fetch_assoc();
+                $response = array('status' => 'success', 'message' => 'Transaction updated successfully', 'courses' => $row['courses']);
+            } else {
+                $response = array('status' => 'error', 'message' => 'No transaction found with the provided id');
+            }
+        } else {
+            $response = array('status' => 'error', 'message' => 'Failed to execute SELECT query');
+        }
+    } else {
+        $response = array('status' => 'error', 'message' => 'Failed to update transaction');
+    }
+    echo json_encode($response);
+    //updateUserCourses($conn, $jsonData);
+}
 
 
-$conn->close();
+function updateUserCourses($conn, $jsonData){
+    $stmt = $conn->prepare("UPDATE `users` SET `own_courses`= ? WHERE `email` = ?");
+    $stmt->bind_param("ss", $jsonData['ids'] ,$jsonData['email']);
+    if ($stmt->execute()) {
+        $response = array('status' => 'success', 'message' => 'User updated successfully');
+
+    } else {
+           $response = array('status' => 'error', 'message' => 'Failed to update user');
+    }
+    echo json_encode($response);
+}
+$conn->close(); 
 ?>
