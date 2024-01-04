@@ -29,10 +29,13 @@ if ($result->num_rows > 0) {
        $rows[] = $row;
     }
    // print json_encode($rows);
+  
 
 } else {
     echo "0 results";
 }
+
+
     $obj = new Transaction($rows[0]);
   //print $trans->getFirstName();
   function request($obj) {
@@ -43,8 +46,8 @@ if ($result->num_rows > 0) {
     $city = $obj->getCity();
     $givenName = $obj->getFirstName();
     $surname = $obj->getLastName();
-    $url = "https://eu-test.oppwa.com/v1/checkouts";
-    $data = "entityId=" .
+    $url = "https://eu-prod.oppwa.com/v1/checkouts";
+    $data = "entityId=8ac7a4c98a5dd899018a5f272d6500ef" .
     "&amount=" . $amount .
     "&currency=SAR" .
     "&merchantTransactionId=" . $transId .
@@ -58,10 +61,10 @@ if ($result->num_rows > 0) {
     $ch = curl_init();
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-                   'Authorization:Bearer =='));
+                   'Authorization:Bearer OGFjN2E0Yzk4YTVkZDg5OTAxOGE1ZjI1ZWY4NjAwZWJ8ZjR0cmdxc2g1Zg=='));
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); // this should be set to true in production
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true); // this should be set to true in production
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     $responseData = curl_exec($ch);
     if(curl_errno($ch)) {
@@ -142,15 +145,17 @@ class Transaction {
     }
 }
 ?>
+
+
 <html>
 <head>
-<script src="https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=<?php echo $id; ?>">
+<script src="https://eu-prod.oppwa.com/v1/paymentWidgets.js?checkoutId=<?php echo $id; ?>">
 
 </script>
 <script> history.replaceState({}, "", location.href.split("?")[0]); </script>
 </head>
 <body>
-<form action="http://localhost:4200/#/my-courses" class="paymentWidgets" data-brands="AMEX MADA MASTER VISA"></form>
+<form action="https://alkhabir.co/#/my-courses" class="paymentWidgets" data-brands="AMEX MADA MASTER VISA"></form>
     <p style="justify-content: center; text-align: center;">Total Amount:
      <?php 
         echo $amount;
