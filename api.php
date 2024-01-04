@@ -1,9 +1,11 @@
 <?php
 header("Access-Control-Allow-Origin: *");
-header("Content-Type: application/json; charset=UTF-8");
+header('Content-Type: application/json; charset=utf-8');
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+header('Access-Control-Allow-Headers: Content-Type');
 
 // Database configuration
-$dbhost = "localhost";
+$dbhost = "127.0.0.1";
 $dbuser = "doma";
 $dbpass = "password";
 $dbname = "tafl";
@@ -30,6 +32,9 @@ elseif (preg_match('/^\/token\/(\w+)$/', $path, $matches)) {
 }
 elseif (preg_match('/^\/updateUser\/(\w+)$/', $path, $matches)) {
     updateUser($conn, $matches[1]);
+}
+elseif ($path == '/pay'){
+    newTrans($conn);
 }
 /*elseif (preg_match('/^\/lessons\/(\d+)$/', $path, $matches)){
     getLessons($conn,$matches[1]);
@@ -141,6 +146,26 @@ function updateUser($conn, $token){
     }
     echo json_encode($response);
 }
+function newTrans($conn){
+    $jsonData = json_decode(file_get_contents('php://input'), true);
+    $stmt = $conn->prepare("INSERT INTO transactions (user_first_name, user_last_name, address, city, email, total, courses, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $jsonData['user_first_name'], $jsonData['user_last_name'], $jsonData['address'], $jsonData['city'], $jsonData['email'], $jsonData['total'], $jsonData['courses'], $jsonData['status']);
+     // we set status to false as it is still a new transaction.
+     if ($stmt->execute()) {
+        $response = array(
+            'status' => 200, 
+            'message' => 'New record created successfully',
+            'transId' =>$conn->insert_id,
+        );
+    } else {
+        $response = array('status' => 401, 'message' => 'Error: ' . $stmt->error);
+    }
+    
+    // Convert the response to JSON format
+    echo json_encode($response);
+    
+}
+
 
 $conn->close();
 ?>
