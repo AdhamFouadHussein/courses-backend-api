@@ -9,7 +9,7 @@ $dbhost = "127.0.0.1";
 $dbuser = "doma";
 $dbpass = "password";
 $dbname = "tafl";
-
+error_reporting(E_ERROR | E_PARSE);
 // Create database connection
 $conn = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
 // Set the charset to UTF-8
@@ -171,42 +171,38 @@ function newTrans($conn){
     echo json_encode($response);
     
 }
-function updateTrans($conn){
+function updateTrans($conn) {
     $jsonData = json_decode(file_get_contents('php://input'), true);
-    $stmt = $conn->prepare("UPDATE `transactions` SET `status`= 1 WHERE `id` = ?");
+    
+    $stmt = $conn->prepare("UPDATE `transactions` SET `status` = 1 WHERE `id` = ?");
     $stmt->bind_param("s", $jsonData['id']);
     $response = array();
+
     if ($stmt->execute()) {
         $stmt = $conn->prepare("SELECT `courses`, `email` FROM `transactions` WHERE `id` = ?");
         $stmt->bind_param("s", $jsonData['id']);
-        if ($stmt->execute()){
+        
+        if ($stmt->execute()) {
             $result = $stmt->get_result();
+
             if ($result->num_rows > 0) {
                 $row = $result->fetch_assoc();
                 $jsonData['ids'] = json_decode($row['courses'], true); // Add the courses to jsonData
                 $jsonData['email'] = $row['email']; // Add the email to jsonData
-                $response = array('status' => 'success', 'message' => 'Transaction updated successfully', 'courses' => $row['courses']);
-            } else {
-                $response = array('status' => 'error', 'message' => 'No transaction found with the provided id');
+
+                updateUserCourses($conn, $jsonData); // Call updateUserCourses with the updated jsonData
+                
             }
-        } else {
-            $response = array('status' => 'error', 'message' => 'Failed to execute SELECT query');
         }
-    } else {
-        $response = array('status' => 'error', 'message' => 'Failed to update transaction');
     }
-    echo json_encode($response);
-    updateUserCourses($conn, $jsonData); // Call updateUserCourses with the updated jsonData
 }
 
-
-
-
-function updateUserCourses($conn, $jsonData){
+function updateUserCourses($conn, $jsonData) {
     // Fetch the current courses of the user
     $stmt = $conn->prepare("SELECT `own_courses` FROM `users` WHERE `email` = ?");
     $stmt->bind_param("s", $jsonData['email']);
     $stmt->execute();
+    
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $current_courses = json_decode($row['own_courses'], true);
@@ -219,42 +215,70 @@ function updateUserCourses($conn, $jsonData){
     }
 
     // Update the user's courses
-    $stmt = $conn->prepare("UPDATE `users` SET `own_courses`= ? WHERE `email` = ?");
+    $stmt = $conn->prepare("UPDATE `users` SET `own_courses` = ? WHERE `email` = ?");
     $stmt->bind_param("ss", json_encode($new_courses), $jsonData['email']);
+    
     if ($stmt->execute()) {
         $response = array('status' => 'success', 'message' => 'User updated successfully');
     } else {
         $response = array('status' => 'error', 'message' => 'Failed to update user');
     }
+
     echo json_encode($response);
 }
-function getPaidCourses($conn){
+function getPaidCourses($conn) {
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        // Handle preflight OPTIONS request
+        header("Access-Control-Allow-Origin: http://localhost:4200");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+        header("Access-Control-Allow-Headers: Content-Type");
+        header("Access-Control-Max-Age: 3600");
+        header("Content-Length: 0");
+        header("Content-Type: text/plain");
+        header("HTTP/1.1 204 No Content");
+        exit();
+    }
+
+    header("Access-Control-Allow-Origin: http://localhost:4200");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type");
+
     // Get the email from the JSON POST request
     $jsonData = json_decode(file_get_contents('php://input'), true);
 
-    // Prepare and execute the query to get the courses from the users table
-    $stmt = $conn->prepare("SELECT `own_courses` FROM `users` WHERE `email` = ?");
-    $stmt->bind_param("s", $jsonData['email']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $course_ids = json_decode($row['own_courses'], true);
+    if ($jsonData && isset($jsonData['email'])) {
+        // Prepare and execute the query to get the courses from the users table
+        $stmt = $conn->prepare("SELECT `own_courses` FROM `users` WHERE `email` = ?");
+        $stmt->bind_param("s", $jsonData['email']);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
 
-    // Prepare the query to get the courses from the courses table
-    $query = "SELECT * FROM `courses` WHERE `id` IN (" . implode(',', array_fill(0, count($course_ids), '?')) . ")";
-    $stmt = $conn->prepare($query);
+        if ($row && isset($row['own_courses'])) {
+            $course_ids = json_decode($row['own_courses'], true);
 
-    // Bind the course ids to the query
-    $types = str_repeat('s', count($course_ids));
-    $stmt->bind_param($types, ...$course_ids);
-
-    // Execute the query and fetch the result
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $courses = $result->fetch_all(MYSQLI_ASSOC);
-
-    // Echo the courses as JSON
-    echo json_encode($courses);
+            // Prepare the query to get the courses from the courses table
+            $query = "SELECT * FROM `courses` WHERE `id` IN (" . implode(',', array_fill(0, count($course_ids), '?')) . ")";
+            $stmt = $conn->prepare($query);
+            $types = str_repeat('s', count($course_ids));
+            $stmt->bind_param($types, ...$course_ids);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $courses = $result->fetch_all(MYSQLI_ASSOC);
+            
+            // Return the courses as JSON
+            header('Content-Type: application/json');
+            echo json_encode($courses);
+        } else {
+            // Return an appropriate error response as JSON
+            header($_SERVER["SERVER_PROTOCOL"] . " 404 Not Found", true, 404);
+            echo json_encode(array('error' => 'User courses not found'));
+        }
+    } else {
+        // Handle the case where email is not provided
+        header($_SERVER["SERVER_PROTOCOL"] . " 400 Bad Request", true, 400);
+        echo json_encode(array('error' => 'Email not provided'));
+    }
 }
 
 $conn->close(); 
