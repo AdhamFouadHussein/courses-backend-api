@@ -2,7 +2,7 @@
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Headers: *");
 
-$servername = "localhost";
+$servername = "127.0.0.1";
 $username = "doma";
 $password = "password";
 $dbname = "tafl";
@@ -29,8 +29,8 @@ if ($result->num_rows > 0) {
     $response = array('status' => 401, 'message' => 'Username or Email already exists');
 } else {
     $token = bin2hex(random_bytes(16));
-    $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, username, phone_number, city, address, token) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $json_obj['fullName'], $email, $passwordd, $username, $json_obj['phone_number'], $json_obj['city'], $json_obj['address'], $token);
+    $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, username, phone_number, city, address, country, state, postalCode, token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssss", $json_obj['fullName'], $email, $passwordd, $username, $json_obj['phone_number'], $json_obj['city'], $json_obj['address'], $json_obj['country'], $json_obj['state'], $json_obj['postalCode'], $token);
     if ($stmt->execute()) {
         $response = array(
             'status' => 200, 
@@ -41,6 +41,9 @@ if ($result->num_rows > 0) {
             'phone_number' => $json_obj['phone_number'],
             'city' => $json_obj['city'],
             'address' => $json_obj['address'],
+            'country' => $json_obj['country'],
+            'state' => $json_obj['state'],
+            'postalCode' => $json_obj['postalCode'],
             'token' => $token
         );
     } else {
