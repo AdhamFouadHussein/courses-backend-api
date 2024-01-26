@@ -3,6 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header('Content-Type: text/html; charset=utf-8');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
+header("Content-Security-Policy: frame-ancestors 'self' https://ap.gateway.mastercard.com");
 
 // Database configuration
 $dbhost = "127.0.0.1";
@@ -34,8 +35,8 @@ class Transaction {
     private $postalCode;
     public function __construct($id, $firstName, $lastName, $address, $city, $email, $total, $country, $state, $postalCode) {
         $this->id = $id;
-        $this->userFirstName = $firstName; // Change variable name here
-        $this->userLastName = $lastName;   // Change variable name here
+        $this->userFirstName = $firstName;
+        $this->userLastName = $lastName;
         $this->address = $address;
         $this->city = $city;
         $this->email = $email;
@@ -165,11 +166,11 @@ function requestPayment($transaction) {
         "customer.givenName" => $givenName,
         "customer.surname" => $surname,
         "paymentType" => $paymentType,
-        "testMode" => "INTERNAL",
+        "testMode" => "EXTERNAL",
         "customParameters[3DS2_enrolled]" => "true",
         "billing.country" => $country,
         "billing.state" => $state,
-        "billing.city" => $city,
+        "billing.postcode" => $postalCode,
         //"currencyCode" => "SAR",
         //'transactionInfo' => json_encode($transactionInfo),
     ]);
@@ -199,6 +200,7 @@ $paymentJsUrl = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=".$id
 
 <html>
 <head>
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ap.gateway.mastercard.com 'unsafe-inline">  
     <script src="<?php echo $paymentJsUrl; ?>"></script>
     <script>history.replaceState({}, "", location.href.split("?")[0]);</script>
 </head>
