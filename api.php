@@ -154,8 +154,8 @@ function updateUser($conn, $token){
 }
 function newTrans($conn){
     $jsonData = json_decode(file_get_contents('php://input'), true);
-    $stmt = $conn->prepare("INSERT INTO transactions (user_first_name, user_last_name, address, city, email, total, courses, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $jsonData['user_first_name'], $jsonData['user_last_name'], $jsonData['address'], $jsonData['city'], $jsonData['email'], $jsonData['total'], $jsonData['courses'], $jsonData['status']);
+    $stmt = $conn->prepare("INSERT INTO transactions (user_first_name, user_last_name, address, city, email, total, courses, status, country, state, postalCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssss", $jsonData['user_first_name'], $jsonData['user_last_name'], $jsonData['address'], $jsonData['city'], $jsonData['email'], $jsonData['total'], $jsonData['courses'], $jsonData['status'], $jsonData['country'], $jsonData['state'], $jsonData['postalCode']);
      // we set status to false as it is still a new transaction.
      if ($stmt->execute()) {
         $response = array(
