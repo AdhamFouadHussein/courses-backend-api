@@ -3,7 +3,7 @@ header("Access-Control-Allow-Origin: *");
 header('Content-Type: text/html; charset=utf-8');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
-header("Content-Security-Policy: frame-ancestors 'self' https://ap.gateway.mastercard.com");
+header("Content-Security-Policy: frame-ancestors *");
 
 // Database configuration
 $dbhost = "127.0.0.1";
@@ -136,7 +136,7 @@ function requestPayment($transaction) {
     if ($path == 'mpay') {
         $entityId = "8ac7a4c98a5dd899018a5f2f851f0102";
         $bearer = "OGFjN2E0Yzk4YTVkZDg5OTAxOGE1ZjI1ZWY4NjAwZWJ8ZjR0cmdxc2g1Zg==";
-        $paymentType = "PA";
+        $paymentType = "DB";
     }
     
     $amount = $transaction->getTotal();
@@ -151,10 +151,6 @@ function requestPayment($transaction) {
     $postalCode = $transaction -> getPostalCode();
     $currency = "SAR";
    
-    $transactionInfo = [
-        'currencyCode' => 'SAR', // Set the currency code here
-        // Other transaction info properties...
-    ];
     $data = http_build_query([
         "entityId" => $entityId,
         "amount" => $amount,
@@ -171,6 +167,16 @@ function requestPayment($transaction) {
         "billing.country" => $country,
         "billing.state" => $state,
         "billing.postcode" => $postalCode,
+        /*
+        "customer.browser.acceptHeader" => "text/html",
+        "customer.browser.screenColorDepth" => "48",
+        "customer.browser.javaEnabled"=>"false",
+        
+        "customer.browser.screenHeight"=> "1200",
+        "customer.browser.screenWidth"=>"1600",
+        "customer.browser.challengeWindow"=>"4",
+        "customer.browser.userAgent"=>"Mozilla/4.0 (MSIE 6.0; Windows NT 5.0)" ,
+        */
         //"currencyCode" => "SAR",
         //'transactionInfo' => json_encode($transactionInfo),
     ]);
@@ -197,16 +203,24 @@ $responseObj = json_decode($responseData);
 $id = $responseObj->id;
 $paymentJsUrl = "https://eu-test.oppwa.com/v1/paymentWidgets.js?checkoutId=".$id;
 ?>
+<?php
+header("Content-Security-Policy: frame-ancestors *");
+?>
 
 <html>
 <head>
-    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' https://ap.gateway.mastercard.com 'unsafe-inline">  
-    <script src="<?php echo $paymentJsUrl; ?>"></script>
-    <script>history.replaceState({}, "", location.href.split("?")[0]);</script>
+
+<meta http-equiv="Content-Security-Policy" content="frame-src 'self' https://ap.gateway.mastercard.com https://eu-test.oppwa.com;">
+
+
+
 </head>
 <body>
+    <script src="<?php echo $paymentJsUrl; ?>"></script> 
+ <p style="text-align: center;">Total Amount: <?php //echo $transaction->getTotal(); ?> SAR</p>
+    <script>history.replaceState({}, "", location.href.split("?")[0]);</script>
     <form action="http://localhost:4200/#/my-courses" class="paymentWidgets" data-brands="AMEX MADA MASTER VISA"></form>
-    <p style="text-align: center;">Total Amount: <?php echo $transaction->getTotal(); ?> SAR</p>
+   
     <script>
         var wpwlOptions = {
             style: "card",
